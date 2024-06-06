@@ -1,0 +1,8 @@
+gpu_id: 0
+model_path: data\model\yolov8s.pt
+conf_thr: 0.3
+iou_thr: 0.45
+input_size: 640
+agnostic_nms: False
+render: True
+render_size: 640
