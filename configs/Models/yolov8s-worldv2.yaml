@@ -4,5 +4,3 @@ conf_thr: 0.3
 iou_thr: 0.45
 input_size: 640
 agnostic_nms: False
-render: True
-render_size: 640

@@ -8,7 +8,7 @@ from .utils import get_sahi_model, scale_boxes, select_device, letterbox, sahi_d
 
 class DetectorYolov8s:
 
-    def __init__(self, model_config="yolov8s.yaml") -> None:
+    def __init__(self, model_config="yolov8s.yaml", conf_thr=None, iou_thr=None, input_size=None, agnostic_nms=None) -> None:
         try:
             with open("configs\Models/" + model_config) as f:
                 cfg = yaml.load(f, Loader=yaml.FullLoader)
@@ -21,10 +21,10 @@ class DetectorYolov8s:
         self._model = torch.load(
             cfg["model_path"], map_location=self._device)["model"].float()
         self._model.to(self._device).eval()
-        self._conf_thr = cfg["conf_thr"]
-        self._iou_thr = cfg["iou_thr"]
-        self._input_size = cfg["input_size"]
-        self.agnostic_nms = cfg["agnostic_nms"]
+        self._conf_thr = cfg["conf_thr"] if conf_thr is None else conf_thr
+        self._iou_thr = cfg["iou_thr"] if iou_thr is None else iou_thr
+        self._input_size = cfg["input_size"] if input_size is None else input_size
+        self.agnostic_nms = cfg["agnostic_nms"] if agnostic_nms is None else agnostic_nms
 
     def _preprocess(self, img):
         img = cv2.resize(img, (self._input_size, self._input_size))
@@ -42,9 +42,11 @@ class DetectorYolov8s:
         return dets
 
     def get_boxes(self, frame):
-        img = self._preprocess(frame)
-        results = self._model(img, augment=False)[0]
-        results = self._postprocess(results, img.shape[2:4], frame.shape[:2])
+        with torch.inference_mode():
+            img = self._preprocess(frame)
+            results = self._model(img, augment=False)[0]
+            results = self._postprocess(
+                results, img.shape[2:4], frame.shape[:2])
 
         boxes = []
         scores = []
